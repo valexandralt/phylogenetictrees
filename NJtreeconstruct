@@ -13,7 +13,7 @@ library(Biostrings)
 library(phangorn)
 ###################################################################################################
 #Use an unique fasta file
-#For this example, here is the fasta file "AllAQPs" (README note)
+#For this example, here is the fasta file "AllAQPs" 
 #This command from Biostrings is used to import a fasta file with protein/amino acids sequences
 AllAqps <- readAAStringSet("AllAQPs.fasta", use.names = TRUE)
 #'msa' package uses MUSCLE, ClustalW and ClustalOmega for sequence alignments
