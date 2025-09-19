@@ -1,0 +1,48 @@
+###################################################################################################
+##########################How to construct a phylogenetic tree in R################################
+#Install packages
+install.packages("BiocManager")
+install.packages("Biostrings")
+install.packages("ape")
+install.packages("phangorn")
+BiocManager::install("msa")
+#And then, activate these packages
+library(msa)
+library(ape)
+library(Biostrings)
+library(phangorn)
+###################################################################################################
+#Use an unique fasta file
+#For this example, here is the fasta file "AllAQPs" (README note)
+#This command from Biostrings is used to import a fasta file with protein/amino acids sequences
+AllAqps <- readAAStringSet("AllAQPs.fasta", use.names = TRUE)
+#'msa' package uses MUSCLE, ClustalW and ClustalOmega for sequence alignments
+#In this case, we used muscle algorithm
+AlignAQP <- msa(AllAqps, method = "Muscle")
+#'phangorn' and 'ape' requires specific formats for alignments, so you can convert with:
+AQPalign <- msaConvert(AlignAQP, type = "ape::AAbin")
+AlnAQP <- as.phyDat.AAbin(AQPalign)
+#compute pairwise distances from this alignment using some models as Blosum62 or 
+#JTT (Jones–Taylor–Thornton)
+#Particularly, JTT is more accurate than others and commonly used for phylogenetic trees 
+#from protein sequences
+Distance <- dist.ml(AlnAQP, model="JTT")
+#Next step is to construct the phylogenetic tree, for example we used Neighbor-Joining model, 
+#but you can find some other methods as Unweighted Pair Group Method with Arithmetic Mean (UPGMA) 
+#in 'phangorn' package 
+tree <- NJ(Distance)
+#Then, it transforms in a maximum likelihood tree
+MVs <- pml(tree, AlnAQP)
+#And optimizes the tree values
+MaxVs <- optim.pml(MVs, rearrangement = "NNI")
+#Finally, perform the bootstraps.
+#This step may take a long time depending on the number of sequences used and pc specifications
+#Run and wait.
+bsF <- bootstrap.pml(MaxVs, bs = 1000, optNni = TRUE)
+#Constructs a tree with bootstraping and maximum likelihood values
+treeBS <- plotBS(MVs$tree,bsF)
+#Finally, visualize the tree
+win.graph()
+plot(treeBS, main="Phylogenetic Tree of TIP aquaporins")
+#Export in newik format to edit (.nwk)
+write.tree(treeBS, file="AllAQPs.nwk")
